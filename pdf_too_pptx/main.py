@@ -17,6 +17,8 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
     pngs = _pdf_too_png(pdf=pdf, reso=reso, outdir=outdir)
     _png_too_pptx(pngs_list=pngs, pptx=out)
 
+    outdir.rmdir()
+
 
 def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     outlist_pngs = []
