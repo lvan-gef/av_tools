@@ -39,7 +39,7 @@ def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
         pix = page.get_pixmap(matrix=matrix)
 
         outdir = outdir.joinpath(f'page_{i}.png')
-        print(f'Export page {i} as; "{outdir.name}"')
+        print(f'Export page {i} as: "{outdir.name}"')
         pix.save(outdir)
         outlist_pngs.append(outdir)
         outdir = pdf.parent.joinpath('.converted')
