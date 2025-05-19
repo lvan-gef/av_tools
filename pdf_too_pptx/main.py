@@ -2,6 +2,7 @@ import argparse
 import sys
 from pathlib import Path
 from collections import namedtuple
+import shutil
 
 import pymupdf
 from pptx import Presentation
@@ -17,12 +18,11 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
     pngs = _pdf_too_png(pdf=pdf, reso=reso, outdir=outdir)
     _png_too_pptx(pngs_list=pngs, pptx=out)
 
-    outdir.rmdir()
-
 
 def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     outlist_pngs = []
 
+    print('Start parsing pdf')
     doc = pymupdf.open(pdf)
 
     for i, page in enumerate(doc, start=1):
@@ -48,6 +48,7 @@ def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
 
 
 def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> None:
+    print('Creating powerpoint')
     prs = Presentation()
 
     prs.slide_width = Inches(20)
@@ -73,6 +74,7 @@ def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> None:
         pic.top = int((slide_height - pic.height) / 2)
 
     prs.save(pptx.name)
+    print(f'Powerpoint is saved at location: "{Path(pptx.name).resolve()}"')
 
 
 if __name__ == '__main__':
