@@ -25,10 +25,28 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
         exit(5)
 
     try:
-        pngs = _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir)
-        pptx = _png_to_pptx(pngs_list=pngs, pptx=out)
+        prs = Presentation()
+        prs.slide_width = Inches(20)
+        prs.slide_height = Inches(11.25)
+    except Exception as e:
+        print(f'Failed to init presention, error: {e}', file=sys.stderr)
 
-        shutil.move(pptx, out)
+    try:
+        print('Start parsing pdf')
+        print('Creating powerpoint')
+        for img in _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir):
+            _png_to_pptx(path=img, prs=prs, width=prs.slide_width,
+                         height=prs.slide_width)
+
+        if len(prs.slides) == 0:
+            raise RuntimeError(
+                "Failed to create any slides in the presentation")
+
+        try:
+            prs.save(out)
+        except Exception as e:
+            raise IOError(f'Failed to save the powerpoint, error: {e}')
+
         print(f'Powerpoint is saved at location: "{out}"')
     except PermissionError as pe:
         print(pe, file=sys.stderr)
@@ -51,10 +69,7 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
                       file=sys.stderr)
 
 
-def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
-    outlist_pngs = []
-
-    print('Start parsing pdf')
+def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path):
     try:
         doc = pymupdf.open(pdf)
     except PermissionError:
@@ -63,10 +78,10 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
         raise RuntimeError(f'A unexpected error: "{
                            e}", while opening pdf: {pdf}')
 
-    try:
         if len(doc) == 0:
             raise ValueError(f'pdf: "{pdf}", is empty')
 
+    try:
         for i, page in enumerate(doc, start=1):
             try:
                 rect = page.rect
@@ -91,79 +106,48 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
                 except Exception as e:
                     raise RuntimeError(f'Failed to save page: {
                                        i} as png, error: {e}')
-                outlist_pngs.append(png_path)
+                yield png_path
             except Exception as e:
                 raise Exception(f'Unexpected error while parsing pdf: {e}')
     finally:
         doc.close()
 
-    if len(outlist_pngs) == 0:
-        raise ValueError(
-            'Parsing pdf went wrong we don\'t have any png from it...')
 
-    return outlist_pngs
-
-
-def _png_to_pptx(pngs_list: list[Path], pptx: Path) -> Path:
-    print('Creating powerpoint')
+def _png_to_pptx(path: Path, prs: Presentation, width: int, height: int):
 
     try:
-        prs = Presentation()
-    except Exception as e:
-        raise Exception(f'Failed to init presention, error: {e}')
+        blank_slide_layout = prs.slide_layouts[6]
 
-    prs.slide_width = Inches(20)
-    prs.slide_height = Inches(11.25)
-    slide_width = prs.slide_width
-    slide_height = prs.slide_height
-
-    for img_path in pngs_list:
         try:
-            if not img_path.exists():
-                raise FileNotFoundError(f'png: "{img_path}" does not exists')
-
-            blank_slide_layout = prs.slide_layouts[6]
-
-            try:
-                slide = prs.slides.add_slide(blank_slide_layout)
-            except Exception as e:
-                raise RuntimeError(
-                    f'Failed to add slide to presention, error: {e}')
-
-            try:
-                pic = slide.shapes.add_picture(str(img_path), 0, 0)
-            except Exception as e:
-                raise RuntimeError(
-                    f'Failed to add picture to slide, error: {e}')
-
-            if pic.width <= 0 or pic.height <= 0:
-                raise ValueError(f'png: {img_path}, have a invalid dimension')
-
-            try:
-                width_ratio = slide_width / pic.width
-                height_ratio = slide_height / pic.height
-                scaling_factor = min(width_ratio, height_ratio, 1)
-
-                pic.width = int(pic.width * scaling_factor)
-                pic.height = int(pic.height * scaling_factor)
-
-                pic.left = int((slide_width - pic.width) / 2)
-                pic.top = int((slide_height - pic.height) / 2)
-            except Exception as e:
-                raise RuntimeError(f'Failed to scale the image: {
-                                   img_path}, error: {e}')
+            slide = prs.slides.add_slide(blank_slide_layout)
         except Exception as e:
-            raise Exception(f'Unexpected error while creating powerpoint: {e}')
+            raise RuntimeError(
+                f'Failed to add slide to presention, error: {e}')
 
-    if len(prs.slides) == 0:
-        raise RuntimeError("Failed to create any slides in the presentation")
+        try:
+            pic = slide.shapes.add_picture(str(path), 0, 0)
+        except Exception as e:
+            raise RuntimeError(
+                f'Failed to add picture to slide, error: {e}')
 
-    try:
-        prs.save(pptx.name)
+        if pic.width <= 0 or pic.height <= 0:
+            raise ValueError(f'png: {path}, have a invalid dimension')
+
+        try:
+            width_ratio = width / pic.width
+            height_ratio = height / pic.height
+            scaling_factor = min(width_ratio, height_ratio, 1)
+
+            pic.width = int(pic.width * scaling_factor)
+            pic.height = int(pic.height * scaling_factor)
+
+            pic.left = int((width - pic.width) / 2)
+            pic.top = int((height - pic.height) / 2)
+        except Exception as e:
+            raise RuntimeError(f'Failed to scale the image: {
+                               path}, error: {e}')
     except Exception as e:
-        raise IOError(f'Failed to save the powerpoint, error: {e}')
-
-    return Path(pptx.name).resolve()
+        raise Exception(f'Unexpected error while creating powerpoint: {e}')
 
 
 if __name__ == '__main__':
