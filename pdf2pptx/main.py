@@ -44,7 +44,7 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
                 "Failed to create any slides in the presentation")
 
         try:
-            prs.save(out)
+            prs.save(str(out))
         except Exception as e:
             raise IOError(f'Failed to save the powerpoint, error: {e}')
 
@@ -80,8 +80,8 @@ def _pdf_to_png(pdf: Path, reso: namedtuple,
         raise RuntimeError(f'A unexpected error: "{
                            e}", while opening pdf: {pdf}')
 
-        if len(doc) == 0:
-            raise ValueError(f'pdf: "{pdf}", is empty')
+    if len(doc) == 0:
+        raise ValueError(f'pdf: "{pdf}", is empty')
 
     try:
         for i, page in enumerate(doc, start=1):
