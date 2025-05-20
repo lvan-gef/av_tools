@@ -1,13 +1,13 @@
-import argparse
-import sys
-from pathlib import Path
 from collections import namedtuple
-import shutil
+from pathlib import Path
 from typing import Generator
+import argparse
+import shutil
+import sys
 
-import pymupdf
 from pptx import Presentation
 from pptx.util import Inches
+import pymupdf
 
 RESOLUTION = namedtuple('resolution', ['width', 'height'])
 
@@ -117,7 +117,6 @@ def _pdf_to_png(pdf: Path, reso: namedtuple,
 
 def _png_to_pptx(path: Path, prs: Presentation,
                  width: int, height: int) -> None:
-
     try:
         blank_slide_layout = prs.slide_layouts[6]
 
