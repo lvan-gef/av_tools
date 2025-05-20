@@ -16,10 +16,12 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
     try:
         outdir.mkdir(parents=True, exist_ok=True)
     except PermissionError:
-        print(f'You don\'t have permission to path: "{outdir}"', file=sys.stderr)
+        print(f'You don\'t have permission to path: "{
+              outdir}"', file=sys.stderr)
         exit(4)
     except Exception as e:
-        print(f'A unexpected error: "{e}", while creating path: {outdir}', file=sys.stderr)
+        print(f'A unexpected error: "{e}", while creating path: {
+              outdir}', file=sys.stderr)
         exit(5)
 
     try:
@@ -45,7 +47,8 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
             try:
                 shutil.rmtree(str(outdir))
             except Exception as e:
-                print(f"Warning: Failed to clean up temporary files: {e}", file=sys.stderr)
+                print(f"Warning: Failed to clean up temporary files: {
+                      e}", file=sys.stderr)
 
 
 def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
@@ -57,7 +60,8 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     except PermissionError:
         raise PermissionError(f'You don\'t have permission to path: "{pdf}"')
     except Exception as e:
-        raise RuntimeError(f'A unexpected error: "{e}", while opening pdf: {outdir}')
+        raise RuntimeError(f'A unexpected error: "{
+                           e}", while opening pdf: {outdir}')
 
     try:
         if len(doc) == 0:
@@ -78,13 +82,15 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
                 try:
                     pix = page.get_pixmap(matrix=matrix)
                 except Exception as e:
-                    raise RuntimeError(f'Failed to get the pixmap on page: {i}, error: {e}')
+                    raise RuntimeError(
+                        f'Failed to get the pixmap on page: {i}, error: {e}')
 
                 png_path = outdir.joinpath(f'page_{i}.png')
                 try:
                     pix.save(png_path)
                 except Exception as e:
-                    raise RuntimeError(f'Failed to save page: {i} as png, error: {e}')
+                    raise RuntimeError(f'Failed to save page: {
+                                       i} as png, error: {e}')
                 outlist_pngs.append(png_path)
             except Exception as e:
                 raise Exception(f'Unexpected error while parsing pdf: {e}')
@@ -92,7 +98,8 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
         doc.close()
 
     if len(outlist_pngs) == 0:
-        raise ValueError(f'Parsing pdf whent wrong we don\'t have any png from it...')
+        raise ValueError(
+            f'Parsing pdf whent wrong we don\'t have any png from it...')
 
     return outlist_pngs
 
@@ -120,12 +127,14 @@ def _png_to_pptx(pngs_list: list[Path], pptx: Path) -> Path:
             try:
                 slide = prs.slides.add_slide(blank_slide_layout)
             except Exception as e:
-                raise RuntimeError(f'Failed to add slide to presention, error: {e}')
+                raise RuntimeError(
+                    f'Failed to add slide to presention, error: {e}')
 
             try:
                 pic = slide.shapes.add_picture(str(img_path), 0, 0)
             except Exception as e:
-                raise RuntimeError(f'Failed to add picture to slide, error: {e}')
+                raise RuntimeError(
+                    f'Failed to add picture to slide, error: {e}')
 
             if pic.width <= 0 or pic.height <= 0:
                 raise ValueError(f'png: {img_path}, have a invalid dimension')
@@ -141,7 +150,8 @@ def _png_to_pptx(pngs_list: list[Path], pptx: Path) -> Path:
                 pic.left = int((slide_width - pic.width) / 2)
                 pic.top = int((slide_height - pic.height) / 2)
             except Exception as e:
-                raise RuntimeError(f'Failed to scale the image: {img_path}, error: {e}')
+                raise RuntimeError(f'Failed to scale the image: {
+                                   img_path}, error: {e}')
         except Exception as e:
             raise Exception(f'Unexpected error while creating powerpoint: {e}')
 
