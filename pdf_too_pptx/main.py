@@ -99,7 +99,7 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
 
     if len(outlist_pngs) == 0:
         raise ValueError(
-            f'Parsing pdf whent wrong we don\'t have any png from it...')
+            'Parsing pdf went wrong we don\'t have any png from it...')
 
     return outlist_pngs
 
