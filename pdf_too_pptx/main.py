@@ -47,8 +47,8 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
             try:
                 shutil.rmtree(str(outdir))
             except Exception as e:
-                print(f"Warning: Failed to clean up temporary files: {
-                      e}", file=sys.stderr)
+                print(f"Failed to clean up temporary files: {e}",
+                      file=sys.stderr)
 
 
 def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
