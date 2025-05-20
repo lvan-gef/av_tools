@@ -8,22 +8,22 @@ import pymupdf
 from pptx import Presentation
 from pptx.util import Inches
 
-RESOLUTION = namedtuple('resolution', ['width', 'heigth'])
+RESOLUTION = namedtuple('resolution', ['width', 'height'])
 
 
 def main(pdf: Path, reso: namedtuple, out: Path) -> None:
     outdir = pdf.parent.joinpath('.converted')
     outdir.mkdir(parents=True, exist_ok=True)
 
-    pngs = _pdf_too_png(pdf=pdf, reso=reso, outdir=outdir)
-    pptx = _png_too_pptx(pngs_list=pngs, pptx=out)
+    pngs = _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir)
+    pptx = _png_to_pptx(pngs_list=pngs, pptx=out)
 
     shutil.move(pptx, out)
     print(f'Powerpoint is saved at location: "{out}"')
     shutil.rmtree(str(outdir))
 
 
-def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
+def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     outlist_pngs = []
 
     print('Start parsing pdf')
@@ -34,7 +34,7 @@ def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
         page_width, page_height = rect.width, rect.height
 
         scale_width = reso.width / page_width
-        scale_height = reso.heigth / page_height
+        scale_height = reso.height / page_height
         scale = min(scale_width, scale_height)
 
         matrix = pymupdf.Matrix(scale, scale)
@@ -49,7 +49,7 @@ def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     return outlist_pngs
 
 
-def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> Path:
+def _png_to_pptx(pngs_list: list[Path], pptx: Path) -> Path:
     print('Creating powerpoint')
     prs = Presentation()
 
@@ -81,7 +81,7 @@ def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> Path:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='png2pptx',
-        description='Convert pdf too pttx')
+        description='Convert pdf to pttx')
     parser.add_argument('filename', type=Path, help='The path to the pdf file')
     parser.add_argument('-r', '--resolution',
                         type=str,
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     args.filename = Path(str(args.filename).lower()).resolve()
     res = args.resolution.split('x')
     if len(res) != 2:
-        print('Not engough arguments for resolution, use format: "<width>x<heigth>"',
+        print('Not engough arguments for resolution, use format: "<width>x<height>"',
               file=sys.stderr)
         exit(1)
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
               file=sys.stderr)
         exit(1)
 
-    RES = RESOLUTION(width=int(res[0]), heigth=int(res[1]))
+    RES = RESOLUTION(width=int(res[0]), height=int(res[1]))
     outname = Path(str(args.filename).replace('pdf', 'pptx'))
 
     main(pdf=args.filename.resolve(), reso=RES, out=outname)
