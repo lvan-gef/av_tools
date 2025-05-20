@@ -36,8 +36,8 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
         print('Start parsing pdf')
         print('Creating powerpoint')
         for img in _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir):
-            _png_to_pptx(path=img, prs=prs, width=prs.slide_width,
-                         height=prs.slide_width)
+            _png_to_pptx(path=img, prs=prs,
+                         width=prs.slide_width, height=prs.slide_height)
 
         if len(prs.slides) == 0:
             raise RuntimeError(
