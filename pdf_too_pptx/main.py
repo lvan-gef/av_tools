@@ -90,16 +90,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     args.filename = Path(str(args.filename).lower()).resolve()
+    if not args.filename.exists():
+        print(f'The pdf: "{args.filename}" does not exists')
+        exit(1)
+
     res = args.resolution.split('x')
     if len(res) != 2:
         print('Not engough arguments for resolution, use format: "<width>x<height>"',
               file=sys.stderr)
-        exit(1)
+        exit(2)
 
     if not res[0].isdigit() or not res[1].isdigit():
         print(f'argument for resolution have a non digit in side it: {res}',
               file=sys.stderr)
-        exit(1)
+        exit(3)
 
     RES = RESOLUTION(width=int(res[0]), height=int(res[1]))
     outname = Path(str(args.filename).replace('pdf', 'pptx'))
