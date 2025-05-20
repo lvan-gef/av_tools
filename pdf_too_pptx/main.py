@@ -13,7 +13,14 @@ RESOLUTION = namedtuple('resolution', ['width', 'height'])
 
 def main(pdf: Path, reso: namedtuple, out: Path) -> None:
     outdir = pdf.parent.joinpath('.converted')
-    outdir.mkdir(parents=True, exist_ok=True)
+    try:
+        outdir.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        print(f'You don\'t have permission to path: "{outdir}"', file=sys.stderr)
+        exit(4)
+    except Exception as e:
+        print(f'A unexpected error: "{e}", while creating path: {outdir}', file=sys.stderr)
+        exit(5)
 
     pngs = _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir)
     pptx = _png_to_pptx(pngs_list=pngs, pptx=out)
@@ -27,7 +34,14 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     outlist_pngs = []
 
     print('Start parsing pdf')
-    doc = pymupdf.open(pdf)
+    try:
+        doc = pymupdf.open(pdf)
+    except PermissionError:
+        print(f'You don\'t have permission to path: "{pdf}"', file=sys.stderr)
+        exit(6)
+    except Exception as e:
+        print(f'A unexpected error: "{e}", while opening pdf: {outdir}', file=sys.stderr)
+        exit(7)
 
     for i, page in enumerate(doc, start=1):
         rect = page.rect
@@ -91,7 +105,7 @@ if __name__ == '__main__':
 
     args.filename = Path(str(args.filename).lower()).resolve()
     if not args.filename.exists():
-        print(f'The pdf: "{args.filename}" does not exists')
+        print(f'The pdf: "{args.filename}" does not exists', file=sys.stderr)
         exit(1)
 
     res = args.resolution.split('x')
