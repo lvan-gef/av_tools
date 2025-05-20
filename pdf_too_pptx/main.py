@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from collections import namedtuple
 import shutil
+from typing import Generator
 
 import pymupdf
 from pptx import Presentation
@@ -69,7 +70,8 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
                       file=sys.stderr)
 
 
-def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path):
+def _pdf_to_png(pdf: Path, reso: namedtuple,
+                outdir: Path) -> Generator[Path, None, None]:
     try:
         doc = pymupdf.open(pdf)
     except PermissionError:
@@ -113,7 +115,8 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path):
         doc.close()
 
 
-def _png_to_pptx(path: Path, prs: Presentation, width: int, height: int):
+def _png_to_pptx(path: Path, prs: Presentation,
+                 width: int, height: int) -> None:
 
     try:
         blank_slide_layout = prs.slide_layouts[6]
@@ -177,7 +180,7 @@ if __name__ == '__main__':
               file=sys.stderr)
         exit(3)
 
-    RES = RESOLUTION(width=int(res[0]), height=int(res[1]))
+    res = RESOLUTION(width=int(res[0]), height=int(res[1]))
     outname = args.filename.with_suffix('.pptx')
 
-    main(pdf=args.filename.resolve(), reso=RES, out=outname)
+    main(pdf=args.filename.resolve(), reso=res, out=outname)
