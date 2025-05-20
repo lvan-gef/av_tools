@@ -16,8 +16,10 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
     outdir.mkdir(parents=True, exist_ok=True)
 
     pngs = _pdf_too_png(pdf=pdf, reso=reso, outdir=outdir)
-    _png_too_pptx(pngs_list=pngs, pptx=out)
+    pptx = _png_too_pptx(pngs_list=pngs, pptx=out)
 
+    shutil.move(pptx, out)
+    print(f'Powerpoint is saved at location: "{out}"')
     shutil.rmtree(str(outdir))
 
 
@@ -49,7 +51,7 @@ def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     return outlist_pngs
 
 
-def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> None:
+def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> Path:
     print('Creating powerpoint')
     prs = Presentation()
 
@@ -76,7 +78,7 @@ def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> None:
         pic.top = int((slide_height - pic.height) / 2)
 
     prs.save(pptx.name)
-    print(f'Powerpoint is saved at location: "{Path(pptx.name).resolve()}"')
+    return Path(pptx.name).resolve()
 
 
 if __name__ == '__main__':
