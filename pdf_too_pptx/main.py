@@ -22,12 +22,22 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
         print(f'A unexpected error: "{e}", while creating path: {outdir}', file=sys.stderr)
         exit(5)
 
-    pngs = _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir)
-    pptx = _png_to_pptx(pngs_list=pngs, pptx=out)
+    try:
+        pngs = _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir)
+        pptx = _png_to_pptx(pngs_list=pngs, pptx=out)
 
-    shutil.move(pptx, out)
-    print(f'Powerpoint is saved at location: "{out}"')
-    shutil.rmtree(str(outdir))
+        shutil.move(pptx, out)
+        print(f'Powerpoint is saved at location: "{out}"')
+    except PermissionError as pe:
+        print(pe, file=sys.stderr)
+    except ValueError as ve:
+        print(ve, file=sys.stderr)
+    except RuntimeError as re:
+        print(re, file=sys.stderr)
+    except Exception as e:
+        print(e, file=sys.stderr)
+    finally:
+        shutil.rmtree(str(outdir))
 
 
 def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
@@ -37,28 +47,41 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
     try:
         doc = pymupdf.open(pdf)
     except PermissionError:
-        print(f'You don\'t have permission to path: "{pdf}"', file=sys.stderr)
-        exit(6)
+        raise PermissionError(f'You don\'t have permission to path: "{pdf}"')
     except Exception as e:
-        print(f'A unexpected error: "{e}", while opening pdf: {outdir}', file=sys.stderr)
-        exit(7)
+        raise RuntimeError(f'A unexpected error: "{e}", while opening pdf: {outdir}')
 
-    for i, page in enumerate(doc, start=1):
-        rect = page.rect
-        page_width, page_height = rect.width, rect.height
+    try:
+        if len(doc) == 0:
+            raise ValueError(f'pdf: "{pdf}", is empty')
 
-        scale_width = reso.width / page_width
-        scale_height = reso.height / page_height
-        scale = min(scale_width, scale_height)
+        for i, page in enumerate(doc, start=1):
+            try:
+                rect = page.rect
+                page_width, page_height = rect.width, rect.height
+                if page_width <= 0 or page_height <= 0:
+                    raise ValueError(f'page: {i}, have a invalid dimension')
 
-        matrix = pymupdf.Matrix(scale, scale)
-        pix = page.get_pixmap(matrix=matrix)
+                scale_width = reso.width / page_width
+                scale_height = reso.height / page_height
+                scale = min(scale_width, scale_height)
 
-        png_path = outdir.joinpath(f'page_{i}.png')
-        pix.save(png_path)
-        outlist_pngs.append(png_path)
+                matrix = pymupdf.Matrix(scale, scale)
+                try:
+                    pix = page.get_pixmap(matrix=matrix)
+                except Exception as e:
+                    raise RuntimeError(f'Failed to get the pixmap on page: {i}, error: {e}')
 
-    doc.close()
+                png_path = outdir.joinpath(f'page_{i}.png')
+                try:
+                    pix.save(png_path)
+                except Exception as e:
+                    raise RuntimeError(f'Failed to save page: {i} as png, error: {e}')
+                outlist_pngs.append(png_path)
+            except Exception as e:
+                raise Exception(f'Unexpected error while parsing pdf: {e}')
+    finally:
+        doc.close()
 
     return outlist_pngs
 
