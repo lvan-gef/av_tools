@@ -1,6 +1,5 @@
-from collections import namedtuple
 from pathlib import Path
-from typing import Generator
+from typing import Generator, NamedTuple
 import argparse
 import shutil
 import sys
@@ -9,10 +8,12 @@ from pptx import Presentation
 from pptx.util import Inches
 import pymupdf
 
-RESOLUTION = namedtuple('resolution', ['width', 'height'])
+class Resolution(NamedTuple):
+    width: int
+    height: int
 
 
-def main(pdf: Path, reso: namedtuple, out: Path) -> None:
+def main(pdf: Path, resolution: Resolution, out: Path) -> None:
     outdir = pdf.parent.joinpath('.converted')
     try:
         outdir.mkdir(parents=True, exist_ok=True)
@@ -35,7 +36,7 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
     try:
         print('Start parsing pdf')
         print('Creating powerpoint')
-        for img in _pdf_to_png(pdf=pdf, reso=reso, outdir=outdir):
+        for img in _pdf_to_png(pdf=pdf, resolution=resolution, outdir=outdir):
             _png_to_pptx(path=img, prs=prs,
                          width=prs.slide_width, height=prs.slide_height)
 
@@ -70,7 +71,7 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
                       file=sys.stderr)
 
 
-def _pdf_to_png(pdf: Path, reso: namedtuple,
+def _pdf_to_png(pdf: Path, resolution: Resolution,
                 outdir: Path) -> Generator[Path, None, None]:
     try:
         doc = pymupdf.open(pdf)
@@ -91,8 +92,8 @@ def _pdf_to_png(pdf: Path, reso: namedtuple,
                 if page_width <= 0 or page_height <= 0:
                     raise ValueError(f'page: {i}, have a invalid dimension')
 
-                scale_width = reso.width / page_width
-                scale_height = reso.height / page_height
+                scale_width = resolution.width / page_width
+                scale_height = resolution.height / page_height
                 scale = min(scale_width, scale_height)
 
                 matrix = pymupdf.Matrix(scale, scale)
@@ -179,7 +180,7 @@ if __name__ == '__main__':
               file=sys.stderr)
         exit(3)
 
-    res = RESOLUTION(width=int(res[0]), height=int(res[1]))
+    res = Resolution(width=int(res[0]), height=int(res[1]))
     outname = args.filename.with_suffix('.pptx')
 
-    main(pdf=args.filename.resolve(), reso=res, out=outname)
+    main(pdf=args.filename.resolve(), resolution=res, out=outname)
