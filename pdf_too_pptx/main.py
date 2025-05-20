@@ -61,7 +61,7 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
         raise PermissionError(f'You don\'t have permission to path: "{pdf}"')
     except Exception as e:
         raise RuntimeError(f'A unexpected error: "{
-                           e}", while opening pdf: {outdir}')
+                           e}", while opening pdf: {pdf}')
 
     try:
         if len(doc) == 0:
