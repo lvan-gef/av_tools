@@ -80,8 +80,8 @@ def _png_to_pptx(pngs_list: list[Path], pptx: Path) -> Path:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog='png2pptx',
-        description='Convert pdf to pttx')
+        prog='pdf2pptx',
+        description='Convert pdf to pptx')
     parser.add_argument('filename', type=Path, help='The path to the pdf file')
     parser.add_argument('-r', '--resolution',
                         type=str,
