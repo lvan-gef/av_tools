@@ -41,7 +41,6 @@ def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
         pix = page.get_pixmap(matrix=matrix)
 
         outdir = outdir.joinpath(f'page_{i}.png')
-        print(f'Export page {i} as: "{outdir.name}"')
         pix.save(outdir)
         outlist_pngs.append(outdir)
         outdir = pdf.parent.joinpath('.converted')
@@ -61,7 +60,6 @@ def _png_too_pptx(pngs_list: list[Path], pptx: Path) -> Path:
     slide_height = prs.slide_height
 
     for img_path in pngs_list:
-        print(f'Add picture: "{img_path.name}" to pptx')
         blank_slide_layout = prs.slide_layouts[6]
         slide = prs.slides.add_slide(blank_slide_layout)
 
@@ -91,7 +89,6 @@ if __name__ == '__main__':
                         default='1920x1080',
                         help='The target resolution of the presention (default 1920x1080)')
     args = parser.parse_args()
-    print(args.filename, args.resolution)
 
     args.filename = Path(str(args.filename).lower()).resolve()
     res = args.resolution.split('x')
