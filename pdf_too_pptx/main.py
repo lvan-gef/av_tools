@@ -120,6 +120,6 @@ if __name__ == '__main__':
         exit(3)
 
     RES = RESOLUTION(width=int(res[0]), height=int(res[1]))
-    outname = Path(str(args.filename).replace('pdf', 'pptx'))
+    outname = args.filename.with_suffix('.pptx')
 
     main(pdf=args.filename.resolve(), reso=RES, out=outname)
