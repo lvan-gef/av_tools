@@ -40,10 +40,9 @@ def _pdf_too_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
         matrix = pymupdf.Matrix(scale, scale)
         pix = page.get_pixmap(matrix=matrix)
 
-        outdir = outdir.joinpath(f'page_{i}.png')
-        pix.save(outdir)
-        outlist_pngs.append(outdir)
-        outdir = pdf.parent.joinpath('.converted')
+        png_path = outdir.joinpath(f'page_{i}.png')
+        pix.save(png_path)
+        outlist_pngs.append(png_path)
 
     doc.close()
 
