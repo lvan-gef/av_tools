@@ -32,6 +32,10 @@ def main(pdf: Path, reso: namedtuple, out: Path) -> None:
         print(pe, file=sys.stderr)
     except ValueError as ve:
         print(ve, file=sys.stderr)
+    except FileNotFoundError as fe:
+        print(fe, file=sys.stderr)
+    except IOError as ioe:
+        print(ioe, file=sys.stderr)
     except RuntimeError as re:
         print(re, file=sys.stderr)
     except Exception as e:
@@ -91,7 +95,11 @@ def _pdf_to_png(pdf: Path, reso: namedtuple, outdir: Path) -> list[Path]:
 
 def _png_to_pptx(pngs_list: list[Path], pptx: Path) -> Path:
     print('Creating powerpoint')
-    prs = Presentation()
+
+    try:
+        prs = Presentation()
+    except Exception as e:
+        raise Exception(f'Failed to init presention, error: {e}')
 
     prs.slide_width = Inches(20)
     prs.slide_height = Inches(11.25)
@@ -99,22 +107,48 @@ def _png_to_pptx(pngs_list: list[Path], pptx: Path) -> Path:
     slide_height = prs.slide_height
 
     for img_path in pngs_list:
-        blank_slide_layout = prs.slide_layouts[6]
-        slide = prs.slides.add_slide(blank_slide_layout)
+        try:
+            if not img_path.exists():
+                raise FileNotFoundError(f'png: "{img_path}" does not exists')
 
-        pic = slide.shapes.add_picture(str(img_path), 0, 0)
+            blank_slide_layout = prs.slide_layouts[6]
 
-        width_ratio = slide_width / pic.width
-        height_ratio = slide_height / pic.height
-        scaling_factor = min(width_ratio, height_ratio, 1)
+            try:
+                slide = prs.slides.add_slide(blank_slide_layout)
+            except Exception as e:
+                raise RuntimeError(f'Failed to add slide to presention, error: {e}')
 
-        pic.width = int(pic.width * scaling_factor)
-        pic.height = int(pic.height * scaling_factor)
+            try:
+                pic = slide.shapes.add_picture(str(img_path), 0, 0)
+            except Exception as e:
+                raise RuntimeError(f'Failed to add picture to slide, error: {e}')
 
-        pic.left = int((slide_width - pic.width) / 2)
-        pic.top = int((slide_height - pic.height) / 2)
+            if pic.width <= 0 or pic.height <= 0:
+                raise ValueError(f'png: {img_path}, have a invalid dimension')
 
-    prs.save(pptx.name)
+            try:
+                width_ratio = slide_width / pic.width
+                height_ratio = slide_height / pic.height
+                scaling_factor = min(width_ratio, height_ratio, 1)
+
+                pic.width = int(pic.width * scaling_factor)
+                pic.height = int(pic.height * scaling_factor)
+
+                pic.left = int((slide_width - pic.width) / 2)
+                pic.top = int((slide_height - pic.height) / 2)
+            except Exception as e:
+                raise RuntimeError(f'Failed to scale the image: {img_path}, error: {e}')
+        except Exception as e:
+            raise Exception(f'Unexpected error while creating powerpoint: {e}')
+
+    if len(prs.slides) == 0:
+        raise RuntimeError("Failed to create any slides in the presentation")
+
+    try:
+        prs.save(pptx.name)
+    except Exception as e:
+        raise IOError(f'Failed to save the powerpoint, error: {e}')
+
     return Path(pptx.name).resolve()
 
 
