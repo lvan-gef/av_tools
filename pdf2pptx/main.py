@@ -8,6 +8,7 @@ from pptx import Presentation
 from pptx.util import Inches
 import pymupdf
 
+
 class Resolution(NamedTuple):
     width: int
     height: int
@@ -15,25 +16,14 @@ class Resolution(NamedTuple):
 
 def main(pdf: Path, resolution: Resolution, out: Path) -> None:
     outdir = pdf.parent.joinpath('.converted')
+    exit_code = 0
     try:
         outdir.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
-        print(f'You don\'t have permission to path: "{
-              outdir}"', file=sys.stderr)
-        exit(4)
-    except Exception as e:
-        print(f'A unexpected error: "{e}", while creating path: {
-              outdir}', file=sys.stderr)
-        exit(5)
 
-    try:
         prs = Presentation()
         prs.slide_width = Inches(20)
         prs.slide_height = Inches(11.25)
-    except Exception as e:
-        print(f'Failed to init presention, error: {e}', file=sys.stderr)
 
-    try:
         print('Start parsing pdf')
         print('Creating powerpoint')
         for img in _pdf_to_png(pdf=pdf, resolution=resolution, outdir=outdir):
@@ -44,24 +34,30 @@ def main(pdf: Path, resolution: Resolution, out: Path) -> None:
             raise RuntimeError(
                 "Failed to create any slides in the presentation")
 
-        try:
-            prs.save(str(out))
-        except Exception as e:
-            raise IOError(f'Failed to save the powerpoint, error: {e}')
-
+        prs.save(str(out))
         print(f'Powerpoint is saved at location: "{out}"')
     except PermissionError as pe:
         print(pe, file=sys.stderr)
+        exit_code = 4
     except ValueError as ve:
         print(ve, file=sys.stderr)
+        exit_code = 5
     except FileNotFoundError as fe:
         print(fe, file=sys.stderr)
+        exit_code = 6
     except IOError as ioe:
         print(ioe, file=sys.stderr)
+        exit_code = 7
     except RuntimeError as re:
         print(re, file=sys.stderr)
+        exit_code = 8
+    except PermissionError:
+        print(f'You don\'t have permission to path: "{
+              outdir}"', file=sys.stderr)
+        exit_code = 9
     except Exception as e:
         print(e, file=sys.stderr)
+        exit_code = 10
     finally:
         if outdir.exists():
             try:
@@ -69,6 +65,9 @@ def main(pdf: Path, resolution: Resolution, out: Path) -> None:
             except Exception as e:
                 print(f"Failed to clean up temporary files: {e}",
                       file=sys.stderr)
+                exit_code = 11
+    if exit_code > 0:
+        exit(exit_code)
 
 
 def _pdf_to_png(pdf: Path, resolution: Resolution,
@@ -150,7 +149,7 @@ def _png_to_pptx(path: Path, prs: Presentation,
             raise RuntimeError(f'Failed to scale the image: {
                                path}, error: {e}')
     except Exception as e:
-        raise Exception(f'Unexpected error while creating powerpoint: {e}')
+        raise Exception(f'Unexpected error while creating slide: {e}')
 
 
 if __name__ == '__main__':
