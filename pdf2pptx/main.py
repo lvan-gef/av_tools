@@ -51,13 +51,9 @@ def main(pdf: Path, resolution: Resolution, out: Path) -> None:
     except RuntimeError as re:
         print(re, file=sys.stderr)
         exit_code = 8
-    except PermissionError:
-        print(f'You don\'t have permission to path: "{
-              outdir}"', file=sys.stderr)
-        exit_code = 9
     except Exception as e:
         print(e, file=sys.stderr)
-        exit_code = 10
+        exit_code = 9
     finally:
         if outdir.exists():
             try:
@@ -65,7 +61,7 @@ def main(pdf: Path, resolution: Resolution, out: Path) -> None:
             except Exception as e:
                 print(f"Failed to clean up temporary files: {e}",
                       file=sys.stderr)
-                exit_code = 11
+                exit_code = 10
     if exit_code > 0:
         exit(exit_code)
 
