@@ -3,22 +3,7 @@ from pathlib import Path
 import sys
 import subprocess
 
-SUPPORTED_VIDEO = {
-    'non-transparend': ['ProRes 422 Proxy', 'Hap Standard',
-                        'ProRes 422 LT', 'Hap Q', 'Photo-JPEG'],
-    'non-transparend-q': ['ProRes 422', 'ProRes 422 HQ'],
-    'transparend': ['ProRes 4444', 'Hap Alpha'],
-    'transparend-q': ['ProRes 4444 XQ'],
-    'containers': ['MOV', 'MP4']
-}
-
-SUPPORTED_AUDIO = {'codec': ['AIFF', 'WAV', 'CAF', 'AAC'],
-                   'channels': {'min': 1, 'max': 24},
-                   'samplerate': {'min': 8, 'max': 192},
-                   'bitdepth': {'min': 8, 'max': 32}
-                   }
-
-SUPPORTED_PIC = {'codec': ['PNG', 'JPG']}
+from args_parser import parse_arguments
 
 
 def parse_probe(streams: list[str]) -> dict['str', bool]:
@@ -34,9 +19,9 @@ def parse_probe(streams: list[str]) -> dict['str', bool]:
     return to_convert
 
 
-def main(path: Path):
+def main(args: dict):
     result = subprocess.run(
-        f'ffprobe -show_streams {path}',
+        f'ffprobe -show_streams {args["filename"]}',
         shell=True,
         capture_output=True,
         text=True
@@ -70,14 +55,10 @@ if __name__ == '__main__':
                         help='The audio bit depth you want to use. (Default: 32)')
     parser.add_argument('-ac', '--audio-channels', type=int, default=2,
                         help='How many audio channels you want to use. (Default: 2)')
-    parser.add_argument('-cv', '--codec-video', type=str, help='The video codec that you want to use. (Default: ProRes 422 proxy)')
+    parser.add_argument('-cv', '--codec-video', type=str,
+                        help='The video codec that you want to use. (Default: ProRes 422 proxy)')
+    parser.add_argument('-vr', '--video-resolution', type=str,
+                        help='The resolustion you want to use. (Default: 1920x1080)')
 
-
-    args = parser.parse_args()
-
-    args.filename = args.filename.resolve()
-    if not args.filename.exists():
-        print(f'The file: "{args.filename}" does not exists', file=sys.stderr)
-        exit(1)
-
-    streams = main(path=args.filename)
+    args = parse_arguments(parser=parser)
+    streams = main(args=args)
