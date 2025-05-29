@@ -4,19 +4,7 @@ import sys
 import subprocess
 
 from args_parser import parse_arguments
-
-
-def parse_probe(streams: list[str]) -> dict['str', bool]:
-    to_convert = {'audio': False, 'video': False, 'pic': False}
-
-    for stream in streams:
-        for line in stream.split('\n'):
-            print(line)
-
-        break
-    pass
-
-    return to_convert
+from ff_probe_parser import parse_probe
 
 
 def main(args: dict):
@@ -26,16 +14,17 @@ def main(args: dict):
         capture_output=True,
         text=True
     )
+
     if result.returncode > 0:
         print(f'ffprobe failed with returncode: {
-              result.returncode}, error message: \'{result.stderr}\'',
+              result.returncode}, error message: {result.stderr}',
               file=sys.stderr)
-        exit(2)
+        exit(10)
 
     streams = [stream for stream in result.stdout.split('[STREAM]') if stream]
     if len(streams) < 1:
         print('ffprobe did not found any stream', file=sys.stderr)
-        exit(3)
+        exit(11)
 
     parse_probe(streams=streams)
 
@@ -55,9 +44,9 @@ if __name__ == '__main__':
                         help='The audio bit depth you want to use. (Default: 32)')
     parser.add_argument('-ac', '--audio-channels', type=int, default=2,
                         help='How many audio channels you want to use. (Default: 2)')
-    parser.add_argument('-cv', '--codec-video', type=str,
+    parser.add_argument('-cv', '--codec-video', type=str, default='ProRes 422 proxy',
                         help='The video codec that you want to use. (Default: ProRes 422 proxy)')
-    parser.add_argument('-vr', '--video-resolution', type=str,
+    parser.add_argument('-vr', '--video-resolution', type=str, default='1920x1080',
                         help='The resolustion you want to use. (Default: 1920x1080)')
 
     args = parse_arguments(parser=parser)

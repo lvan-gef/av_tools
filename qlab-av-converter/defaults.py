@@ -1,9 +1,9 @@
 SUPPORTED_VIDEO = {
-    'non-transparend': ['ProRes 422 Proxy', 'Hap Standard',
-                        'ProRes 422 LT', 'Hap Q', 'Photo-JPEG'],
-    'non-transparend-q': ['ProRes 422', 'ProRes 422 HQ'],
-    'transparend': ['ProRes 4444', 'Hap Alpha'],
-    'transparend-q': ['ProRes 4444 XQ'],
+    'non-transparend': ['PRORES 422 PROXY', 'HAP STANDARD',
+                        'PRORES 422 LT', 'HAP Q', 'PHOTO-JPEG'],
+    'non-transparend-q': ['PRORES 422', 'PRORES 422 HQ'],
+    'transparend': ['PRORES 4444', 'HAP ALPHA'],
+    'transparend-q': ['PRORES 4444 XQ'],
     'containers': ['MOV', 'MP4']
 }
 
