@@ -46,7 +46,7 @@ def parse_arguments(parser: argparse.ArgumentParser) -> dict:
               args.codec_video.upper()}', file=sys.stderr)
         exit(6)
     else:
-        parse_args['video_codec'] = args.codec_video
+        parse_args['video_codec'] = args.codec_video.upper()
 
     resolution = args.video_resolution.lower().split('x')
     if len(resolution) != 2:
@@ -58,7 +58,7 @@ def parse_arguments(parser: argparse.ArgumentParser) -> dict:
               file=sys.stderr)
         exit(8)
 
-    parse_args['resolution'] = {'width': int(resolution[0]),
-                                'heigth': int(resolution[1])}
+    parse_args['resolution'] = {'width': resolution[0],
+                                'heigth': resolution[1]}
 
     return parse_args

@@ -7,9 +7,9 @@ from args_parser import parse_arguments
 from ff_probe_parser import parse_probe
 
 
-def main(args: dict):
+def main(config: dict):
     result = subprocess.run(
-        f'ffprobe -show_streams {args["filename"]}',
+        f'ffprobe -hide_banner -show_streams {config["filename"]}',
         shell=True,
         capture_output=True,
         text=True
@@ -26,7 +26,12 @@ def main(args: dict):
         print('ffprobe did not found any stream', file=sys.stderr)
         exit(11)
 
-    parse_probe(streams=streams)
+    to_convert = parse_probe(streams=streams, config=config)
+    print(to_convert)
+
+    if any(to_convert.values()):
+        ff_convert(config=config, state=to_convert)
+        print('convert it ')
 
 
 if __name__ == '__main__':
@@ -50,4 +55,4 @@ if __name__ == '__main__':
                         help='The resolustion you want to use. (Default: 1920x1080)')
 
     args = parse_arguments(parser=parser)
-    streams = main(args=args)
+    streams = main(config=args)
