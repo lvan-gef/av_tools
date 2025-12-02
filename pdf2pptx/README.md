@@ -44,17 +44,3 @@ python main.py path/to/your/file.pdf -r 1280x720
 ```
 
 The default resolution is 1920x1080.
-
-## Examples
-
-Convert a PDF with default settings:
-```bash
-python main.py document.pdf
-```
-
-## How It Works
-
-1. The PDF is parsed using PyMuPDF
-2. Each page is converted to PNG images at the specified resolution
-3. The PNG images are inserted into a PowerPoint presentation
-4. Temporary files are cleaned up automatically
